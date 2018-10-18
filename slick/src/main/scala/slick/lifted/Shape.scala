@@ -103,9 +103,9 @@ trait OptionShapeImplicits extends PrimitiveShapeImplicits {
 
 trait PrimitiveShapeImplicits {
   //Shape for literal value to rep must be the lowest priority to avoid some compilation issues (eg slick.lifted.OptionLift and slick.lifted.AnyOptionExtensionMethods)
-  implicit final def primitiveShape[T, Level <: ShapeLevel](implicit tm: TypedType[T]): Shape[Level, T, T, Rep[T]] = new Shape[Level, T, T, Rep[T]] {
+  implicit final def primitiveShape[T, Level <: ShapeLevel](implicit tm: TypedType[T]): Shape[Level, T, T, ConstColumn[T]] = new Shape[Level, T, T, ConstColumn[T]] {
     override def pack(value: Mixed): Packed = LiteralColumn(value)
-    override def packedShape: Shape[Level, Packed, Unpacked, Packed] = RepShape[Level, Rep[T], T]
+    override def packedShape: Shape[Level, Packed, Unpacked, Packed] = RepShape[Level, ConstColumn[T], T]
     override def buildParams(extract: Any => Unpacked): Packed = new ConstColumn[T](new QueryParameter(extract, tm))(tm)
     override def encodeRef(value: Packed, path: Node): Packed = value.encodeRef(path)
     override def toNode(value: Packed): Node = value.toNode
