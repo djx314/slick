@@ -179,8 +179,7 @@ final class AnyOptionExtensionMethods[O <: Rep[_], P](val r: O) extends AnyVal {
     val gen = new AnonSymbol
     val mapv = f(OptionLift.baseValue[P, O](r, Ref(gen)))
     val n = OptionFold(r.toNode, shape.toNode(shape.pack(ifEmpty)), shape.toNode(shape.pack(mapv)), gen)
-    //TODO djx314 remove packedShape
-    shape.packedShape.encodeRef(shape.pack(mapv), n)
+    shape.encodeRef(shape.pack(mapv), n)
   }
 
   /** Return the result of applying `f` to this Option's value if this Option is non-empty, otherwise None. */
@@ -210,16 +209,8 @@ final class AnyOptionExtensionMethods[O <: Rep[_], P](val r: O) extends AnyVal {
     r.encodeRef(OptionFold(r.toNode, LiteralNode.nullOption, cond, gen)).asInstanceOf[O]
   }
 
-  //TODO djx314 delete
   /** Get the value inside this Option, if it is non-empty, otherwise the supplied default. */
-  /*def getOrElse[M, P2 <: P](default: M)(implicit shape1: Shape[FlatShapeLevel, M, _, P], ol: OptionLift[P2, O], shape2: Shape[FlatShapeLevel, P2, _, P]): P =
-    // P2 != P can only happen if M contains plain values, which pack to ConstColumn instead of Rep.
-    // Both have the same packedShape (RepShape), so we can safely cast here:
-    //TODO djx314 add commet
-    fold[P, P](shape1.pack(default): P)(identity)(shape2.packedShape)*/
-
   def getOrElse[M](default: M)(implicit shape: Shape[FlatShapeLevel, M, _, P]): P =
-    //TODO djx314 add commet
     fold[P, P](shape.pack(default): P)(identity)(shape.packedShape)
 
   /** Check if this Option is empty. */

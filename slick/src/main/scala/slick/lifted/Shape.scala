@@ -269,13 +269,13 @@ trait FlatShapeLevel extends NestedShapeLevel
 trait ColumnsShapeLevel extends FlatShapeLevel
 
 /** A value together with its Shape */
-case class ShapedValue[T, U](value: T, shape: Shape[_ <: FlatShapeLevel, T, U, _]) extends Rep[U] {
+class ShapedValue[T, U](val value: T, val shape: Shape[_ <: FlatShapeLevel, T, U, T]) extends Rep[U] {
   override def encodeRef(path: Node): ShapedValue[T, U] = {
-    val fv = shape.encodeRef(shape.pack(value), path).asInstanceOf[T]
+    val fv = shape.encodeRef(shape.pack(value), path)
     if(fv.asInstanceOf[AnyRef] eq value.asInstanceOf[AnyRef]) this else new ShapedValue(fv, shape)
   }
   override def toNode: Node = shape.toNode(shape.pack(value))
-  def packedValue[R](implicit ev: Shape[_ <: FlatShapeLevel, T, _, R]): ShapedValue[R, U] = ShapedValue(shape.pack(value).asInstanceOf[R], shape.packedShape.asInstanceOf[Shape[FlatShapeLevel, R, U, _]])
+  def packedValue[R](implicit ev: Shape[_ <: FlatShapeLevel, T, _, R]): ShapedValue[R, U] = ShapedValue(shape.pack(value).asInstanceOf[R], shape.packedShape.asInstanceOf[Shape[FlatShapeLevel, R, U, R]])
   def zip[T2, U2](s2: ShapedValue[T2, U2]) = new ShapedValue[(T, T2), (U, U2)]((value, s2.value), Shape.tuple2Shape(shape, s2.shape))
   def <>[R : ClassTag](f: (U => R), g: (R => Option[U])) = new MappedProjection[R, U](shape.toNode(shape.pack(value)), MappedScalaType.Mapper(g.andThen(_.get).asInstanceOf[Any => Any], f.asInstanceOf[Any => Any], None), implicitly[ClassTag[R]])
   @inline def shaped: ShapedValue[T, U] = this
@@ -284,6 +284,8 @@ case class ShapedValue[T, U](value: T, shape: Shape[_ <: FlatShapeLevel, T, U, _
 }
 
 object ShapedValue {
+  def apply[T, U, R](value: T, shape: Shape[_ <: FlatShapeLevel, T, U, R]): ShapedValue[R, U] = new ShapedValue(shape.pack(value), shape.packedShape)
+
   def mapToImpl[R <: Product with Serializable, U](c: Context { type PrefixType = ShapedValue[_, U] })(rCT: c.Expr[ClassTag[R]])(implicit rTag: c.WeakTypeTag[R], uTag: c.WeakTypeTag[U]): c.Tree = {
     import c.universe._
     val rSym = symbolOf[R]
@@ -347,25 +349,26 @@ object ShapedValue {
   * has a valid shape. A ProvenShape has itself a Shape so it can be used in
   * place of the value that it wraps for purposes of packing and unpacking. */
 trait ProvenShape[U] {
-  def value: Any
-  val shape: Shape[_ <: FlatShapeLevel, _, U, _]
-  def packedValue[R](implicit ev: Shape[_ <: FlatShapeLevel, _, U, R]): ShapedValue[R, U]
-  def toNode = packedValue(shape).toNode
+  type Packed
+  def value: Packed
+  val shape: Shape[_ <: FlatShapeLevel, Packed, U, Packed]
+  def packedValue: ShapedValue[Packed, U] = ShapedValue(value, shape)
+  def toNode = packedValue.toNode
 }
 
 object ProvenShape {
   /** Convert an appropriately shaped value to a ProvenShape */
-  implicit def proveShapeOf[T, U](v: T)(implicit sh: Shape[_ <: FlatShapeLevel, T, U, _]): ProvenShape[U] =
+  implicit def proveShapeOf[T, U, R](v: T)(implicit sh: Shape[_ <: FlatShapeLevel, T, U, R]): ProvenShape[U] =
     new ProvenShape[U] {
-      override def value = v
-      override val shape: Shape[_ <: FlatShapeLevel, _, U, _] = sh
-      override def packedValue[R](implicit ev: Shape[_ <: FlatShapeLevel, _, U, R]): ShapedValue[R, U] = ShapedValue(sh.pack(value).asInstanceOf[R], sh.packedShape.asInstanceOf[Shape[FlatShapeLevel, R, U, _]])
+      override type Packed = R
+      override def value: R = sh.pack(v)
+      override val shape: Shape[_ <: FlatShapeLevel, R, U, R] = sh.packedShape
     }
 
   /** The Shape for a ProvenShape */
   implicit def provenShapeShape[T, P](implicit shape: Shape[_ <: FlatShapeLevel, T, T, P]): Shape[FlatShapeLevel, ProvenShape[T], T, P] = new Shape[FlatShapeLevel, ProvenShape[T], T, P] {
-    override def pack(value: Mixed): Packed = //TODO djx314 change Mixed to Packed
-      value.shape.pack(value.value.asInstanceOf[value.shape.Mixed]).asInstanceOf[Packed]
+    override def pack(value: Mixed): Packed =
+      value.shape.pack(value.value).asInstanceOf[Packed]
     override def packedShape: Shape[FlatShapeLevel, Packed, Unpacked, Packed] =
       shape.packedShape.asInstanceOf[Shape[FlatShapeLevel, Packed, Unpacked, Packed]]
     override def buildParams(extract: Any => Unpacked): Packed =
