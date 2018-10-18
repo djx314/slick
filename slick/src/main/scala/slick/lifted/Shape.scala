@@ -143,7 +143,7 @@ abstract class ProductNodeShape[Level <: ShapeLevel, C, M <: C, U <: C, P <: C] 
   def getIterator(value: C): Iterator[Any] =
     shapes.iterator.zipWithIndex.map(t => getElement(value, t._2))
 
-  def pack(value: Mixed) = {
+  def pack(value: Mixed): Packed = {
     val elems = shapes.iterator.zip(getIterator(value)).map{ case (p, f) => p.pack(f.asInstanceOf[p.Mixed]) }
     buildValue(elems.toIndexedSeq).asInstanceOf[Packed]
   }
