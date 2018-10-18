@@ -178,7 +178,7 @@ final class AnyOptionExtensionMethods[O <: Rep[_], P](val r: O) extends AnyVal {
   def fold[B, BP](ifEmpty: B)(f: P => B)(implicit shape: Shape[FlatShapeLevel, B, _, BP]): BP = {
     val gen = new AnonSymbol
     val mapv = f(OptionLift.baseValue[P, O](r, Ref(gen)))
-    val n = OptionFold(r.toNode, shape.toNode(ifEmpty), shape.toNode(mapv), gen)
+    val n = OptionFold(r.toNode, shape.toNode(shape.pack(ifEmpty)), shape.toNode(shape.pack(mapv)), gen)
     shape.packedShape.encodeRef(shape.pack(mapv), n).asInstanceOf[BP]
   }
 

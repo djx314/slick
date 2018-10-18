@@ -44,9 +44,9 @@ object ForeignKey {
       onDelete,
       originalSourceColumns,
       originalTargetColumns.asInstanceOf[Any => Any],
-      linearizeFieldRefs(pShape.toNode(originalSourceColumns)),
-      linearizeFieldRefs(pShape.toNode(originalTargetColumns(targetTableShaped.value))),
-      linearizeFieldRefs(pShape.toNode(originalTargetColumns(originalTargetTable))),
+      linearizeFieldRefs(pShape.toNode(pShape.pack(originalSourceColumns))),
+      linearizeFieldRefs(pShape.toNode(pShape.pack(originalTargetColumns(targetTableShaped.value)))),
+      linearizeFieldRefs(pShape.toNode(pShape.pack(originalTargetColumns(originalTargetTable)))),
       targetTableShaped.value.tableNode,
       pShape
     )

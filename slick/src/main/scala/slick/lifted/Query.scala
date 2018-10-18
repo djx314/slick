@@ -231,7 +231,7 @@ sealed abstract class Query[+E, U, C[_]] extends QueryBase[C[U]] { self =>
     val generator = new AnonSymbol
     val aliased = shaped.encodeRef(Ref(generator)).value
     val fv = f(aliased)
-    new WrappingQuery[E, U, C](Distinct(generator, toNode, shape.toNode(fv)), shaped)
+    new WrappingQuery[E, U, C](Distinct(generator, toNode, shape.toNode(shape.pack(fv))), shaped)
   }
 
   /** Change the collection type to build when executing the query. */

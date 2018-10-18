@@ -62,7 +62,7 @@ trait BasicProfile extends BasicActionComponent { self: BasicProfile =>
     implicit def streamableAppliedCompiledFunctionActionExtensionMethods[R, RU, EU, C[_]](c: AppliedCompiledFunction[_, Query[R, EU, C], RU]): StreamingQueryActionExtensionMethods[RU, EU] =
       createStreamingQueryActionExtensionMethods[RU, EU](c.compiledQuery, c.param)
     implicit def recordQueryActionExtensionMethods[M, R](q: M)(implicit shape: Shape[_ <: FlatShapeLevel, M, R, _]): QueryActionExtensionMethods[R, NoStream] =
-      createQueryActionExtensionMethods[R, NoStream](queryCompiler.run(shape.toNode(q)).tree, ())
+      createQueryActionExtensionMethods[R, NoStream](queryCompiler.run(shape.toNode(shape.pack(q))).tree, ())
   }
 
   /** The API for using the query language with a single import
