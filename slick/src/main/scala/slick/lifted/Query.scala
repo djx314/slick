@@ -203,8 +203,8 @@ sealed abstract class Query[+E, U, C[_]] extends QueryBase[C[U]] { self =>
 
   def pack[R](implicit packing: Shape[_ <: FlatShapeLevel, E, U, R]): Query[R, U, C] =
     new Query[R, U, C] {
-      val shaped: ShapedValue[_ <: R, U] = ShapedValue[E, U, R](self.shaped.value, packing)
-      def toNode = self.toNode
+      val shaped: ShapedValue[_ <: R, U] = ShapedValue(self.shaped.value, packing)
+      def toNode = shaped.toNode
     }
 
   /** Select the first `num` elements. */
