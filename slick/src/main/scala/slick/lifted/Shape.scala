@@ -61,8 +61,7 @@ object Shape extends ConstColumnShapeImplicits with AbstractTableShapeImplicits 
     def pack(value: Mixed) = LiteralColumn(value)
     override def packedShape = RepShape[Level, Packed, Unpacked]
     def buildParams(extract: Any => Unpacked): Packed = new ConstColumn[T](new QueryParameter(extract, tm))(tm)
-    def encodeRef(value: Packed, path: Node): Packed =
-      throw new SlickException("Shape does not have the same Mixed and Packed type")
+    def encodeRef(value: Packed, path: Node): Packed = value.encodeRef(path)
     def toNode(value: Packed): Node = value.toNode
   }
 
@@ -156,12 +155,12 @@ abstract class ProductNodeShape[Level <: ShapeLevel, C, M <: C, U <: C, P <: C] 
   }
   def encodeRef(value: Packed, path: Node): Packed = {
     val elems = shapes.iterator.zip(getIterator(value)).zipWithIndex.map {
-      case ((p, x), pos) => p.encodeRef(p.pack(x.asInstanceOf[p.Mixed]), Select(path, ElementSymbol(pos + 1)))
+      case ((p, x), pos) => p.encodeRef(x.asInstanceOf[p.Packed], Select(path, ElementSymbol(pos + 1)))
     }
     buildValue(elems.toIndexedSeq).asInstanceOf[Packed]
   }
   def toNode(value: Packed): Node = ProductNode(ConstArray.from(shapes.iterator.zip(getIterator(value)).map {
-    case (p, f) => p.toNode(p.pack(f.asInstanceOf[p.Mixed]))
+    case (p, f) => p.toNode(f.asInstanceOf[p.Packed])
   }.toIterable))
 }
 
@@ -360,7 +359,7 @@ object ProvenShape {
 
   /** The Shape for a ProvenShape */
   implicit def provenShapeShape[T, P](implicit shape: Shape[_ <: FlatShapeLevel, T, T, P]): Shape[FlatShapeLevel, ProvenShape[T], T, P] = new Shape[FlatShapeLevel, ProvenShape[T], T, P] {
-    def pack(value: Mixed): Packed =
+    def pack(value: Mixed): Packed = //TODO change Mixed to Packed
       value.shape.pack(value.value.asInstanceOf[value.shape.Mixed]).asInstanceOf[Packed]
     override def packedShape: Shape[FlatShapeLevel, Packed, Unpacked, Packed] =
       shape.packedShape.asInstanceOf[Shape[FlatShapeLevel, Packed, Unpacked, Packed]]
