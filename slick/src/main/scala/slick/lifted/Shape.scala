@@ -57,13 +57,14 @@ abstract class Shape[Level <: ShapeLevel, -Mixed_, Unpacked_, Packed_] {
 }
 
 object Shape extends ConstColumnShapeImplicits with AbstractTableShapeImplicits with TupleShapeImplicits {
-  implicit final def primitiveShape[T, Level <: ShapeLevel](implicit tm: TypedType[T]): Shape[Level, T, T, ConstColumn[T]] = new Shape[Level, T, T, ConstColumn[T]] {
+  //TODO djx314 delete
+  /*implicit final def primitiveShape[T, Level <: ShapeLevel](implicit tm: TypedType[T]): Shape[Level, T, T, Rep[T]] = new Shape[Level, T, T, Rep[T]] {
     def pack(value: Mixed) = LiteralColumn(value)
-    override def packedShape = constColumnShape[Unpacked, Level]
+    override def packedShape = RepShape[Level, Rep[T], T]
     def buildParams(extract: Any => Unpacked): Packed = new ConstColumn[T](new QueryParameter(extract, tm))(tm)
     def encodeRef(value: Packed, path: Node): Packed = value.encodeRef(path)
     def toNode(value: Packed): Node = value.toNode
-  }
+  }*/
 
   @inline implicit final def unitShape[Level <: ShapeLevel]: Shape[Level, Unit, Unit, Unit] =
     unitShapePrototype.asInstanceOf[Shape[Level, Unit, Unit, Unit]]
@@ -102,10 +103,20 @@ trait RepShapeImplicits extends OptionShapeImplicits {
     RepShape.asInstanceOf[Shape[Level, Rep[Option[M]], Option[U], Rep[Option[P]]]]
 }
 
-trait OptionShapeImplicits {
+trait OptionShapeImplicits extends PrimitiveShapeImplicits {
   /** A Shape for Option-valued non-Reps. */
   @inline implicit def anyOptionShape[M, U, P, Level <: ShapeLevel](implicit sh: Shape[_ <: Level, M, U, P]): Shape[Level, Rep[Option[M]], Option[U], Rep[Option[P]]] =
     RepShape.asInstanceOf[Shape[Level, Rep[Option[M]], Option[U], Rep[Option[P]]]]
+}
+
+trait PrimitiveShapeImplicits {
+  implicit final def primitiveShape[T, Level <: ShapeLevel](implicit tm: TypedType[T]): Shape[Level, T, T, Rep[T]] = new Shape[Level, T, T, Rep[T]] {
+    def pack(value: Mixed) = LiteralColumn(value)
+    override def packedShape = RepShape[Level, Rep[T], T]
+    def buildParams(extract: Any => Unpacked): Packed = new ConstColumn[T](new QueryParameter(extract, tm))(tm)
+    def encodeRef(value: Packed, path: Node): Packed = value.encodeRef(path)
+    def toNode(value: Packed): Node = value.toNode
+  }
 }
 
 /** Shape for Rep values (always fully packed) */
