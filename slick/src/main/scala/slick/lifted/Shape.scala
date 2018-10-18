@@ -57,9 +57,9 @@ abstract class Shape[Level <: ShapeLevel, -Mixed_, Unpacked_, Packed_] {
 }
 
 object Shape extends ConstColumnShapeImplicits with AbstractTableShapeImplicits with TupleShapeImplicits {
-  implicit final def primitiveShape[T, Level <: ShapeLevel](implicit tm: TypedType[T]): Shape[Level, T, T, Rep[T]] = new Shape[Level, T, T, Rep[T]] {
+  implicit final def primitiveShape[T, Level <: ShapeLevel](implicit tm: TypedType[T]): Shape[Level, T, T, ConstColumn[T]] = new Shape[Level, T, T, ConstColumn[T]] {
     def pack(value: Mixed) = LiteralColumn(value)
-    override def packedShape = RepShape[Level, Packed, Unpacked]
+    override def packedShape = constColumnShape[Unpacked, Level]
     def buildParams(extract: Any => Unpacked): Packed = new ConstColumn[T](new QueryParameter(extract, tm))(tm)
     def encodeRef(value: Packed, path: Node): Packed = value.encodeRef(path)
     def toNode(value: Packed): Node = value.toNode
@@ -85,6 +85,7 @@ trait AbstractTableShapeImplicits extends RepShapeImplicits {
 }
 
 trait ConstColumnShapeImplicits extends RepShapeImplicits {
+  //TODO djx314 can delete
   /** A Shape for ConstColumns. It is identical to `columnShape` but it
     * ensures that a `ConstColumn[T]` packs to itself, not just to
     * `Rep[T]`. This allows ConstColumns to be used as fully packed
@@ -359,7 +360,7 @@ object ProvenShape {
 
   /** The Shape for a ProvenShape */
   implicit def provenShapeShape[T, P](implicit shape: Shape[_ <: FlatShapeLevel, T, T, P]): Shape[FlatShapeLevel, ProvenShape[T], T, P] = new Shape[FlatShapeLevel, ProvenShape[T], T, P] {
-    def pack(value: Mixed): Packed = //TODO change Mixed to Packed
+    def pack(value: Mixed): Packed = //TODO djx314 change Mixed to Packed
       value.shape.pack(value.value.asInstanceOf[value.shape.Mixed]).asInstanceOf[Packed]
     override def packedShape: Shape[FlatShapeLevel, Packed, Unpacked, Packed] =
       shape.packedShape.asInstanceOf[Shape[FlatShapeLevel, Packed, Unpacked, Packed]]
