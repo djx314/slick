@@ -219,8 +219,6 @@ final class AnyOptionExtensionMethods[O <: Rep[_], P](val r: O) extends AnyVal {
     fold[P, P](shape1.pack(default): P)(identity)(shape2.packedShape)*/
 
   def getOrElse[M](default: M)(implicit shape: Shape[FlatShapeLevel, M, _, P]): P =
-    // P2 != P can only happen if M contains plain values, which pack to ConstColumn instead of Rep.
-    // Both have the same packedShape (RepShape), so we can safely cast here:
     //TODO djx314 add commet
     fold[P, P](shape.pack(default): P)(identity)(shape.packedShape)
 
