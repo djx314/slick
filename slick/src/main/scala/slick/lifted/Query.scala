@@ -157,12 +157,12 @@ sealed abstract class Query[+E, U, C[_]] extends QueryBase[C[U]] { self =>
   /** Partition this query into a query of pairs of a key and a nested query
     * containing the elements for the key, according to some discriminator
     * function. */
-  def groupBy[K, T, G, P](f: E => K)(implicit kshape: Shape[_ <: FlatShapeLevel, K, T, G], vshape: Shape[_ <: FlatShapeLevel, E, _, P]): Query[(G, Query[P, U, Seq]), (T, Query[P, U, Seq]), C] = {
+  def groupBy[K, T, G](f: E => K)(implicit kshape: Shape[_ <: FlatShapeLevel, K, T, G]): Query[(G, Query[E, U, Seq]), (T, Query[E, U, Seq]), C] = {
     val sym = new AnonSymbol
     val key = ShapedValue(f(shaped.encodeRef(Ref(sym)).value), kshape)
-    val value = ShapedValue(pack.to[Seq], RepShape[FlatShapeLevel, Query[P, U, Seq], Query[P, U, Seq]])
+    val value = ShapedValue(self.to[Seq], RepShape[FlatShapeLevel, Query[E, U, Seq], Query[E, U, Seq]])
     val group = GroupBy(sym, toNode, key.toNode)
-    new WrappingQuery[(G, Query[P, U, Seq]), (T, Query[P, U, Seq]), C](group, key.zip(value))
+    new WrappingQuery[(G, Query[E, U, Seq]), (T, Query[E, U, Seq]), C](group, key.zip(value))
   }
 
   /** Specify part of a select statement for update and marked for row level locking */
@@ -201,11 +201,12 @@ sealed abstract class Query[+E, U, C[_]] extends QueryBase[C[U]] { self =>
   /** Test whether this query is non-empty. */
   def exists = Library.Exists.column[Boolean](toNode)
 
-  def pack[R](implicit packing: Shape[_ <: FlatShapeLevel, E, _, R]): Query[R, U, C] =
+  //TODO djx314 not to delete
+  /*def pack[R](implicit packing: Shape[_ <: FlatShapeLevel, E, _, R]): Query[R, U, C] =
     new Query[R, U, C] {
       val shaped: ShapedValue[_ <: R, U] = self.shaped.packedValue(packing)
       def toNode = self.toNode
-    }
+    }*/
 
   /** Select the first `num` elements. */
   def take(num: ConstColumn[Long]): Query[E, U, C] = new WrappingQuery[E, U, C](Take(toNode, num.toNode), shaped)
