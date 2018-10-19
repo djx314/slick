@@ -167,7 +167,6 @@ abstract class ProductNodeShape[Level <: ShapeLevel, C, M <: C, U <: C, P <: C] 
   override def toNode(value: Packed): Node = ProductNode(ConstArray.from(shapes.iterator.zip(getIterator(value)).map {
     case (p, f) => p.toNode(f.asInstanceOf[p.Packed])
   }.toIterable))
-
 }
 
 /** Base class for ProductNodeShapes with a type mapping */
