@@ -149,7 +149,10 @@ class NewQuerySemanticsTest extends AsyncTest[RelationalTestDB] {
     // More elaborate query
     val q2 = for {
       c <- coffees.filter(_.price < 900).map(_.*)
-      s <- suppliers if s.id === c._2
+      s <- suppliers if {
+        val value = c._2
+        s.id === value
+      }
     } yield (c._1, s.name)
 
     // Lifting scalar values
