@@ -72,7 +72,7 @@ class NewQuerySemanticsTest extends AsyncTest[RelationalTestDB] {
     } yield (c.supID, (c.name, 42))
     val qa2 = coffees.take(3).map(_.name).take(2)
     val qb = qa.take(2).map(_._2)
-    val qb2 = qa.map(n => n).take(2).map(_._2 )
+    val qb2 = qa.map(n => n).take(2).map(_._2)
     val qc = qa.map(_._2).take(2)
 
     val a1 = seq(
@@ -149,7 +149,10 @@ class NewQuerySemanticsTest extends AsyncTest[RelationalTestDB] {
     // More elaborate query
     val q2 = for {
       c <- coffees.filter(_.price < 900).map(_.*)
-      s <- suppliers if s.id === c._2
+      s <- suppliers if {
+        val value = c._2
+        s.id === value
+      }
     } yield (c._1, s.name)
 
     // Lifting scalar values
