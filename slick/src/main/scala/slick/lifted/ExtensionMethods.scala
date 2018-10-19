@@ -210,8 +210,8 @@ final class AnyOptionExtensionMethods[O <: Rep[_], P](val r: O) extends AnyVal {
   }
 
   /** Get the value inside this Option, if it is non-empty, otherwise the supplied default. */
-  def getOrElse[M, P2](default: M)(implicit shape1: Shape[FlatShapeLevel, M, _, P2], shape2: Shape[FlatShapeLevel, P2, _, P]): P =
-    fold[P, P](shape2.pack(shape1.pack(default)))(identity)(shape2.packedShape)
+  def getOrElse[M](default: M)(implicit shape: Shape[FlatShapeLevel, M, _, P]): P =
+    fold[P, P](shape.pack(default): P)(identity)(shape.packedShape)
 
   /** Check if this Option is empty. */
   def isEmpty: Rep[Boolean] = fold(LiteralColumn(true))(_ => LiteralColumn(false))
