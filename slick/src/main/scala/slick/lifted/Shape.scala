@@ -165,7 +165,11 @@ abstract class ProductNodeShape[Level <: ShapeLevel, C, M <: C, U <: C, P <: C] 
     buildValue(elems.toIndexedSeq).asInstanceOf[Packed]
   }
   override def toNode(value: Packed): Node = ProductNode(ConstArray.from(shapes.iterator.zip(getIterator(value)).map {
-    case (p, f) => p.toNode(f.asInstanceOf[p.Packed])
+    case (p, f) =>
+      //TODO djx314 remove test code.
+      println("11" * 100 + value)
+      println("22" * 100 + value.getClass)
+      p.toNode(f.asInstanceOf[p.Packed])
   }.toIterable))
 }
 
