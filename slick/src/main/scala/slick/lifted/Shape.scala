@@ -121,7 +121,16 @@ object RepShape extends Shape[FlatShapeLevel, Rep[_], Any, Rep[_]] {
   override def buildParams(extract: Any => Unpacked): Packed =
     throw new SlickException("Shape does not have the same Mixed and Unpacked type")
   override def encodeRef(value: Packed, path: Node): Packed = value.encodeRef(path)
-  override def toNode(value: Packed): Node = value.toNode
+  override def toNode(value: Packed): Node = {
+    try {
+      value.toNode
+    } catch {
+      case e: Exception =>
+        println("66" * 100 + value)
+        println("77" * 100 + value.getClass)
+        throw e
+    }
+  }
 }
 
 /** Base class for Shapes of record values which are represented by
@@ -169,7 +178,14 @@ abstract class ProductNodeShape[Level <: ShapeLevel, C, M <: C, U <: C, P <: C] 
       //TODO djx314 remove test code.
       println("11" * 100 + value)
       println("22" * 100 + value.getClass)
-      p.toNode(f.asInstanceOf[p.Packed])
+      try {
+        p.toNode(f.asInstanceOf[p.Packed])
+      } catch {
+        case e: Exception =>
+          println("33" * 100 + value)
+          println("44" * 100 + value.getClass)
+          throw e
+      }
   }.toIterable))
 }
 
