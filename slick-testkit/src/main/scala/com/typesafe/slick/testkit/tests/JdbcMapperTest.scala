@@ -377,9 +377,7 @@ class JdbcMapperTest extends AsyncTest[JdbcTestDB] {
       def b = column[Boolean]("b")
       def s = column[String]("s")
       def * = id :: b :: s :: HNil
-      def mapped = *.<>(s => Data(s(0), s(1), s(2)), { r: Data => Option(r.id :: r.b :: r.s :: HNil) })
-      //TODO need to fix
-      //def mapped = *.mapTo[Data]
+      def mapped = *.mapTo[Data]
     }
     val bs = TableQuery[B]
 
